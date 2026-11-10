@@ -14,10 +14,26 @@ function requiredInProduction(name, fallback = '') {
   return value;
 }
 
+function parseOrigins(...values) {
+  const origins = new Set();
+  for (const value of values) {
+    String(value || '')
+      .split(',')
+      .map((part) => part.trim().replace(/\/$/, ''))
+      .filter(Boolean)
+      .forEach((origin) => origins.add(origin));
+  }
+  return [...origins];
+}
+
+const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').trim().replace(/\/$/, '');
+const allowedOrigins = parseOrigins(clientUrl, process.env.CLIENT_ORIGINS);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 5050),
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  clientUrl,
+  allowedOrigins: allowedOrigins.length ? allowedOrigins : [clientUrl],
   mongodbUri: (process.env.MONGODB_URI || '').trim(),
   jwtSecret: requiredInProduction('JWT_SECRET', 'dev-only-jwt-secret-change-me'),
   sessionSecret: requiredInProduction('SESSION_SECRET', 'dev-only-session-secret-change-me'),

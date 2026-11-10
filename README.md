@@ -110,7 +110,8 @@ Recommended easy option: **Render Web Service**
    - `PORT` (host usually sets this)
    - `MONGODB_URI`
    - `JWT_SECRET` / `SESSION_SECRET` (long random strings)
-   - `CLIENT_URL=https://your-frontend-domain`
+   - `CLIENT_URL=https://nemat.gems.workers.dev` (must match the live frontend exactly)
+   - Optional: `CLIENT_ORIGINS=https://old-frontend.example,https://another.example`
    - `COOKIE_NAME=nemat_gems_session`
    - `BUSINESS_*` contact fields
    - For images in production, use object storage (see below). Local `server/uploads` is fine only for demos.
