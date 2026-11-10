@@ -1,11 +1,16 @@
 export const businessConfig = {
   name: process.env.BUSINESS_NAME || 'Nemat Gems and Jewellery',
   tagline: 'Artificial gems and stones for your next creation',
-  phone: process.env.BUSINESS_PHONE || '+00 0000000000',
-  whatsapp: process.env.BUSINESS_WHATSAPP || '+00 0000000000',
-  email: process.env.BUSINESS_EMAIL || 'info@example.com',
-  address: process.env.BUSINESS_ADDRESS || 'Your business address',
-  mapUrl: process.env.BUSINESS_MAP_URL || '',
+  phone: process.env.BUSINESS_PHONE || '+917877609474',
+  whatsapp: process.env.BUSINESS_WHATSAPP || '+917877609474',
+  email: process.env.BUSINESS_EMAIL || 'avikhan7891@gmail.com',
+  address:
+    process.env.BUSINESS_ADDRESS ||
+    'Plot No 2778, Mohalla Chabuk Sawaran, Ramganj, Jaipur, Rajasthan 302003',
+  mapUrl:
+    process.env.BUSINESS_MAP_URL ||
+    'https://www.google.com/maps/search/?api=1&query=Plot%20No%202778%20Mohalla%20Chabuk%20Sawaran%20Ramganj%20Jaipur%20Rajasthan%20302003',
+
   hours: process.env.BUSINESS_HOURS || 'Monday – Saturday, 10:00 AM – 6:00 PM',
   socialLinks: {
     instagram: process.env.BUSINESS_INSTAGRAM || '',

@@ -1,11 +1,12 @@
 export const businessConfig = {
   name: 'Nemat Gems and Jewellery',
   tagline: 'Artificial gems and stones for your next creation',
-  phone: '+00 0000000000',
-  whatsapp: '+00 0000000000',
-  email: 'info@example.com',
-  address: 'Your business address',
-  mapUrl: '',
+  phone: '+917877609474',
+  whatsapp: '+917877609474',
+  email: 'avikhan7891@gmail.com',
+  address: 'Plot No 2778, Mohalla Chabuk Sawaran, Ramganj, Jaipur, Rajasthan 302003',
+  mapUrl:
+    'https://www.google.com/maps/search/?api=1&query=Plot%20No%202778%20Mohalla%20Chabuk%20Sawaran%20Ramganj%20Jaipur%20Rajasthan%20302003',
   hours: 'Monday – Saturday, 10:00 AM – 6:00 PM',
   socialLinks: {
     instagram: '',
