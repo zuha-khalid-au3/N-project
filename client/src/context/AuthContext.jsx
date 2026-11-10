@@ -37,9 +37,10 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const response = await authService.login(email, password);
-    if (response.data?.token) {
-      setAuthToken(response.data.token);
+    if (!response.data?.token) {
+      throw new Error('Login did not return a session token. Please retry after the latest deploy.');
     }
+    setAuthToken(response.data.token);
     setUser(response.data.user);
     return response.data.user;
   }

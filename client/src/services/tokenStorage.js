@@ -1,23 +1,34 @@
 const TOKEN_KEY = 'nemat_admin_token';
 
-export function getAuthToken() {
+let memoryToken = '';
+
+function readStore(store) {
   try {
-    return window.localStorage.getItem(TOKEN_KEY) || '';
+    return store?.getItem(TOKEN_KEY) || '';
   } catch {
     return '';
   }
 }
 
-export function setAuthToken(token) {
+function writeStore(store, token) {
   try {
-    if (!token) {
-      window.localStorage.removeItem(TOKEN_KEY);
-      return;
-    }
-    window.localStorage.setItem(TOKEN_KEY, token);
+    if (!token) store?.removeItem(TOKEN_KEY);
+    else store?.setItem(TOKEN_KEY, token);
   } catch {
-    // Ignore storage failures (private mode quotas, etc.).
+    // Private mode / blocked storage — memory token still works for this tab session.
   }
+}
+
+export function getAuthToken() {
+  if (memoryToken) return memoryToken;
+  memoryToken = readStore(window.sessionStorage) || readStore(window.localStorage) || '';
+  return memoryToken;
+}
+
+export function setAuthToken(token) {
+  memoryToken = token || '';
+  writeStore(window.sessionStorage, memoryToken);
+  writeStore(window.localStorage, memoryToken);
 }
 
 export function clearAuthToken() {

@@ -1,3 +1,4 @@
+import { getApiBase } from '../config/apiBase.js';
 import { apiRequest } from './api.js';
 import { getAuthToken } from './tokenStorage.js';
 
@@ -96,7 +97,7 @@ export async function uploadProductImage(file, { altText = '', sortOrder = 0, on
   formData.append('sortOrder', String(sortOrder));
 
   // Progress via XHR for better UX feedback
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+  const API_URL = getApiBase();
   const result = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_URL}/admin/uploads`);

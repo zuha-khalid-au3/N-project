@@ -1,8 +1,10 @@
 name = "nemat"
+main = "worker.js"
 compatibility_date = "2025-11-10"
 
-# Cloudflare Workers static assets (new dashboard uses wrangler deploy)
+# Proxy /api and /uploads through this worker so admin auth is first-party on mobile.
 [assets]
 directory = "./client/dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = false
+run_worker_first = true

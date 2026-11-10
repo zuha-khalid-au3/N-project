@@ -6,12 +6,14 @@ import { env } from '../config/environment.js';
 const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function getAuthCookieOptions() {
+  // Prefer Lax: frontend should call the API same-origin via the Cloudflare worker proxy.
+  // SameSite=None still allowed via COOKIE_SAMESITE=none if someone hits the API host directly.
+  const sameSite = String(process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
   return {
     httpOnly: true,
     secure: env.isProduction,
-    sameSite: env.isProduction ? 'none' : 'lax',
-    // Helps Chromium keep cross-site cookies when third-party cookies are restricted.
-    ...(env.isProduction ? { partitioned: true } : {}),
+    sameSite: sameSite === 'none' ? 'none' : 'lax',
+    ...(sameSite === 'none' && env.isProduction ? { partitioned: true } : {}),
     maxAge: COOKIE_MAX_AGE_MS,
     path: '/',
   };

@@ -10,10 +10,12 @@ export function formatStockStatus(status) {
   }
 }
 
+import { getAssetOrigin } from '../config/apiBase.js';
+
 export function resolveImageUrl(url) {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
-  const origin = apiBase.replace(/\/api\/?$/, '');
-  return `${origin}${url.startsWith('/') ? url : `/${url}`}`;
+  const origin = getAssetOrigin();
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return origin ? `${origin}${path}` : path;
 }

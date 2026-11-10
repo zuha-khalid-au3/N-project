@@ -1,6 +1,7 @@
+import { getApiBase } from '../config/apiBase.js';
 import { clearAuthToken, getAuthToken } from './tokenStorage.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+const API_URL = getApiBase();
 
 export class ApiError extends Error {
   constructor(payload, status) {

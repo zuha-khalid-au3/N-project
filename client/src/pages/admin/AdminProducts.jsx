@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Seo from '../../components/Seo.jsx';
 import StatusMessage from '../../components/StatusMessage.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import {
   deleteProduct,
   fetchAdminProducts,
@@ -13,6 +14,8 @@ import {
 import { formatStockStatus, resolveImageUrl } from '../../utils/format.js';
 
 export default function AdminProducts() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [q, setQ] = useState('');
@@ -35,6 +38,11 @@ export default function AdminProducts() {
       setItems(response.data.items || []);
       setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 });
     } catch (err) {
+      if (err.status === 401) {
+        await logout();
+        navigate('/admin/login', { replace: true });
+        return;
+      }
       setError(
         err.message ||
           'Unable to load products. The server may be waking up — please retry in a few seconds.'
