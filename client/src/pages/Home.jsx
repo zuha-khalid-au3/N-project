@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import Seo from '../components/Seo.jsx';
 import StatusMessage from '../components/StatusMessage.jsx';
 import { useBusiness } from '../context/BusinessContext.jsx';
 import { fetchFeaturedProducts, fetchProducts } from '../services/productService.js';
+import { withRetry } from '../utils/retry.js';
 import { buildWhatsAppUrl, generalQuoteMessage } from '../utils/whatsapp.js';
 
 function mergeProducts(featured = [], latest = []) {
@@ -36,28 +37,33 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      fetchFeaturedProducts().catch(() => ({ data: { items: [] } })),
-      fetchProducts({ limit: 16, sort: 'newest' }),
-    ])
-      .then(([featuredResponse, productsResponse]) => {
-        if (!active) return;
-        setProducts(
-          mergeProducts(featuredResponse.data.items || [], productsResponse.data.items || [])
-        );
-      })
-      .catch(() => {
-        if (active) setError('Unable to load products right now.');
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+  const loadProducts = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [featuredResponse, productsResponse] = await withRetry(
+        () =>
+          Promise.all([
+            fetchFeaturedProducts().catch(() => ({ data: { items: [] } })),
+            fetchProducts({ limit: 16, sort: 'newest' }),
+          ]),
+        { retries: 4, delayMs: 2000 }
+      );
+      setProducts(
+        mergeProducts(featuredResponse.data.items || [], productsResponse.data.items || [])
+      );
+    } catch {
+      setError(
+        'Unable to load products right now. The server may be waking up — please retry in a few seconds.'
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   return (
     <>
@@ -109,7 +115,14 @@ export default function Home() {
           </div>
         </div>
 
-        {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+        {error ? (
+          <div>
+            <StatusMessage tone="error">{error}</StatusMessage>
+            <button type="button" className="btn btn--gold" onClick={loadProducts}>
+              Retry loading products
+            </button>
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="product-grid product-grid--shop">
