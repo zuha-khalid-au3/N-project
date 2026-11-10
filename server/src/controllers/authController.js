@@ -10,7 +10,8 @@ export async function login(req, res, next) {
     }
 
     res.cookie(env.cookieName, result.token, getAuthCookieOptions());
-    return success(res, { user: result.user }, 'Logged in successfully');
+    // Return token for cross-origin SPA auth (workers.dev → Render); cookies alone are unreliable.
+    return success(res, { user: result.user, token: result.token }, 'Logged in successfully');
   } catch (error) {
     return next(error);
   }

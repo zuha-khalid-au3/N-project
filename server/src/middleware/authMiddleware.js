@@ -3,9 +3,17 @@ import { env } from '../config/environment.js';
 import { AdminUser } from '../models/AdminUser.js';
 import { failure } from '../utils/response.js';
 
+function readAccessToken(req) {
+  const header = req.headers.authorization || '';
+  if (header.startsWith('Bearer ')) {
+    return header.slice(7).trim();
+  }
+  return req.cookies?.[env.cookieName] || '';
+}
+
 export async function requireAuth(req, res, next) {
   try {
-    const token = req.cookies?.[env.cookieName];
+    const token = readAccessToken(req);
     if (!token) {
       return failure(res, 'UNAUTHORIZED', 'Authentication required', 401);
     }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as authService from '../services/authService.js';
+import { clearAuthToken, getAuthToken, setAuthToken } from '../services/tokenStorage.js';
 
 const AuthContext = createContext(null);
 
@@ -9,12 +10,21 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+    const token = getAuthToken();
+    if (!token) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
     authService
       .getMe()
       .then((response) => {
         if (active) setUser(response.data.user);
       })
       .catch(() => {
+        clearAuthToken();
         if (active) setUser(null);
       })
       .finally(() => {
@@ -27,12 +37,20 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const response = await authService.login(email, password);
+    if (response.data?.token) {
+      setAuthToken(response.data.token);
+    }
     setUser(response.data.user);
     return response.data.user;
   }
 
   async function logout() {
-    await authService.logout();
+    try {
+      await authService.logout();
+    } catch {
+      // Ignore network logout failures; local session still clears.
+    }
+    clearAuthToken();
     setUser(null);
   }
 

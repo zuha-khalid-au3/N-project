@@ -1,3 +1,5 @@
+import { clearAuthToken, getAuthToken } from './tokenStorage.js';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 
 export class ApiError extends Error {
@@ -46,6 +48,11 @@ export async function apiRequest(path, options = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
+  const token = getAuthToken();
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   let lastError;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -72,6 +79,9 @@ export async function apiRequest(path, options = {}) {
         : { success: response.ok };
 
       if (!response.ok || payload.success === false) {
+        if (response.status === 401 && token && path !== '/auth/login') {
+          clearAuthToken();
+        }
         const error = new ApiError(payload, response.status);
         if (attempt < retries && isRetryableFailure(error, response.status)) {
           lastError = error;

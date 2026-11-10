@@ -10,6 +10,8 @@ export function getAuthCookieOptions() {
     httpOnly: true,
     secure: env.isProduction,
     sameSite: env.isProduction ? 'none' : 'lax',
+    // Helps Chromium keep cross-site cookies when third-party cookies are restricted.
+    ...(env.isProduction ? { partitioned: true } : {}),
     maxAge: COOKIE_MAX_AGE_MS,
     path: '/',
   };

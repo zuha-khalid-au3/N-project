@@ -1,4 +1,5 @@
 import { apiRequest } from './api.js';
+import { getAuthToken } from './tokenStorage.js';
 
 function toQuery(params = {}) {
   const search = new URLSearchParams();
@@ -100,6 +101,10 @@ export async function uploadProductImage(file, { altText = '', sortOrder = 0, on
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_URL}/admin/uploads`);
     xhr.withCredentials = true;
+    const token = getAuthToken();
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && onProgress) {
         onProgress(Math.round((event.loaded / event.total) * 100));
