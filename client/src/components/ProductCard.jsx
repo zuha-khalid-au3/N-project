@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBusiness } from '../context/BusinessContext.jsx';
 import { formatStockStatus, resolveImageUrl } from '../utils/format.js';
@@ -24,15 +25,18 @@ export default function ProductCard({ product, featured = false }) {
   const business = useBusiness();
   const image = product.images?.[0];
   const tone = placeholderTone(product);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(image) && !imageFailed;
 
   return (
     <article className={`product-card ${featured ? 'product-card--featured' : ''}`}>
       <Link to={`/products/${product.slug}`} className="product-card__media">
-        {image ? (
+        {showImage ? (
           <img
             src={resolveImageUrl(image.url)}
             alt={image.altText || product.name}
             loading={featured ? 'eager' : 'lazy'}
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div

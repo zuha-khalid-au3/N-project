@@ -27,14 +27,22 @@ function isRetryableFailure(error, status) {
   );
 }
 
-export async function apiRequest(path, options = {}) {
-  const headers = new Headers(options.headers || {});
-  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-  const method = String(options.method || 'GET').toUpperCase();
-  const retries = options.retries ?? (method === 'GET' ? 3 : 0);
-  const timeoutMs = options.timeoutMs ?? 20000;
+function needsCredentials(path, method) {
+  return path.startsWith('/auth') || path.startsWith('/admin') || method !== 'GET';
+}
 
-  if (!isFormData && options.body && !headers.has('Content-Type')) {
+export async function apiRequest(path, options = {}) {
+  const { retries: retriesOption, timeoutMs: timeoutOption, credentials: credentialsOption, ...fetchOptions } =
+    options;
+  const headers = new Headers(fetchOptions.headers || {});
+  const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
+  const method = String(fetchOptions.method || 'GET').toUpperCase();
+  const retries = retriesOption ?? (method === 'GET' ? 4 : 0);
+  const timeoutMs = timeoutOption ?? 45000;
+  const credentials =
+    credentialsOption ?? (needsCredentials(path, method) ? 'include' : 'omit');
+
+  if (!isFormData && fetchOptions.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -43,21 +51,19 @@ export async function apiRequest(path, options = {}) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer =
-      controller && timeoutMs
-        ? setTimeout(() => controller.abort(), timeoutMs)
-        : null;
+      controller && timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
     try {
       const response = await fetch(`${API_URL}${path}`, {
-        ...options,
+        ...fetchOptions,
         method,
         headers,
-        credentials: 'include',
-        signal: controller?.signal || options.signal,
+        credentials,
+        signal: controller?.signal || fetchOptions.signal,
         body:
-          options.body && !isFormData && typeof options.body !== 'string'
-            ? JSON.stringify(options.body)
-            : options.body,
+          fetchOptions.body && !isFormData && typeof fetchOptions.body !== 'string'
+            ? JSON.stringify(fetchOptions.body)
+            : fetchOptions.body,
       });
 
       const contentType = response.headers.get('content-type') || '';
@@ -69,7 +75,7 @@ export async function apiRequest(path, options = {}) {
         const error = new ApiError(payload, response.status);
         if (attempt < retries && isRetryableFailure(error, response.status)) {
           lastError = error;
-          await sleep(1500 * (attempt + 1));
+          await sleep(2000 * (attempt + 1));
           continue;
         }
         throw error;
@@ -79,7 +85,7 @@ export async function apiRequest(path, options = {}) {
     } catch (error) {
       lastError = error;
       if (attempt < retries && isRetryableFailure(error, error?.status)) {
-        await sleep(1500 * (attempt + 1));
+        await sleep(2000 * (attempt + 1));
         continue;
       }
 
