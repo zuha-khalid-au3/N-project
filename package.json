@@ -2,13 +2,23 @@
   "name": "n-project",
   "version": "0.1.0",
   "private": true,
-  "description": "Nemat Gems and Jewellery product catalogue starter project",
+  "description": "Nemat Gems and Jewellery product catalogue",
   "workspaces": [
     "client",
     "server"
   ],
   "scripts": {
-    "dev": "echo \"Run the Cursor implementation phases first; client and server scripts will be added during scaffolding.\"",
-    "build": "echo \"Build scripts will be added during Phase A.\""
+    "dev": "concurrently -n server,client -c gold,cyan \"yarn dev:server\" \"yarn dev:client\"",
+    "dev:client": "yarn workspace client dev",
+    "dev:server": "yarn workspace server dev",
+    "build": "yarn workspace client build",
+    "start": "yarn workspace server start",
+    "lint": "yarn workspace client lint && yarn workspace server lint",
+    "create-admin": "yarn workspace server create-admin",
+    "seed": "yarn workspace server seed",
+    "test": "yarn workspace server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

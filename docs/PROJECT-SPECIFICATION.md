@@ -1,4 +1,4 @@
-# Cursor Project Specification: Artificial Gems & Stones Catalogue
+# Project Specification: Artificial Gems & Stones Catalogue
 
 ## 1. Project objective
 
@@ -83,7 +83,7 @@ Copy them into `client/public/assets/brand/` and use them as follows:
 - Preserve the aspect ratio and do not stretch, rotate, or apply filters to the logos.
 - Provide a light-background usage and a dark-background usage. Ensure the logo remains readable in both contexts.
 - Add an accessible alt value such as `Nemat Gems and Jewellery`.
-- If the supplied files are unavailable in the Cursor workspace, create a temporary placeholder using the same proportions and clearly mark it for replacement. Do not invent a different brand name.
+- If the supplied files are unavailable in the project workspace, create a temporary placeholder using the same proportions and clearly mark it for replacement. Do not invent a different brand name.
 
 ### Public website UI
 
@@ -719,7 +719,7 @@ The implementation is acceptable only when all of the following work:
 23. The website includes usable loading, empty, success, and error states.
 24. The website has no TypeScript files.
 
-## 18. Cursor execution instructions
+## 18. Execution instructions
 
 Implement this in phases and keep the application runnable after every phase.
 

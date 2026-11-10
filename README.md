@@ -1,48 +1,116 @@
-# N-project — Nemat Gems and Jewellery
+# Nemat Gems and Jewellery
 
-Starter repository for the Nemat Gems and Jewellery product catalogue website.
+Product catalogue and wholesale enquiry website for artificial gems and stones.
 
-## Current contents
+## Stack
 
-- `client/public/assets/brand/nemat-gems-jewellery-logo-wordmark.png` — horizontal website logo.
-- `client/public/assets/brand/nemat-gems-jewellery-emblem.png` — compact emblem for mobile, favicon, social media, and packaging.
-- `docs/CURSOR-PROJECT-SPECIFICATION.md` — complete implementation prompt for Cursor.
+- React + Vite (JavaScript only)
+- Node.js + Express API
+- MongoDB Atlas via Mongoose
+- Local image storage in development; Cloudflare R2-ready for production
+- Cloudflare Pages for the frontend SPA
 
-## Planned technology
+## Structure
 
-- React and Vite frontend
-- JavaScript only; no TypeScript
-- Node.js and Express backend
-- MongoDB Atlas database
-- Object storage for product images
-- GitHub for source control
-- Cloudflare Pages for the frontend
+```text
+client/   Public website + admin UI
+server/   Express API, MongoDB models, uploads
+docs/     Project specification
+```
 
-## Continue in Cursor
+## Quick start (Yarn)
 
-1. Clone the repository:
+1. Copy environment defaults:
 
    ```bash
-   git clone https://github.com/zuha-khalid-au3/N-project.git
-   cd N-project
+   cp .env.example .env
    ```
 
-2. Open the folder in Cursor.
-3. Open `docs/CURSOR-PROJECT-SPECIFICATION.md`.
-4. Attach or reference that file in Cursor.
-5. Attach the two logo files from `client/public/assets/brand/`.
-6. Ask Cursor to implement the specification phase by phase.
+2. Set `MONGODB_URI`, `JWT_SECRET`, and business contact placeholders in `.env`.
 
-Suggested first Cursor instruction:
+3. Install dependencies:
 
-> Read `docs/CURSOR-PROJECT-SPECIFICATION.md` completely. Start with Phase A: scaffold the React/Vite client and Node.js/Express server while preserving the existing brand assets. Use JavaScript only, MongoDB Atlas as the database, and keep the project runnable after this phase. Do not replace MongoDB with another database or introduce TypeScript.
+   ```bash
+   yarn install
+   ```
 
-## Brand
+4. Create the first admin:
 
-Brand name: **Nemat Gems and Jewellery**
+   ```bash
+   yarn create-admin --email owner@example.com --password 'your-strong-password'
+   ```
 
-Primary visual direction: deep charcoal, midnight blue, warm gold, white, soft grey, and royal jewel blue. Use the horizontal wordmark in the desktop header and the compact emblem in small spaces.
+5. Optional sample products (clearly marked SAMPLE):
 
-## Important security rule
+   ```bash
+   yarn seed
+   ```
 
-Never commit real `.env` files, MongoDB connection strings, storage credentials, JWT secrets, or admin passwords. Use `.env.example` files with placeholder values only.
+6. Run API + client:
+
+   ```bash
+   yarn dev
+   ```
+
+- Website: http://localhost:5173
+- API health: http://localhost:5050/api/health
+- Admin: http://localhost:5173/admin/login
+
+> On macOS, port `5000` is often used by AirPlay Receiver, so the API defaults to `5050`.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `yarn dev` | Start API and Vite client |
+| `yarn build` | Production frontend build |
+| `yarn start` | Start API only |
+| `yarn create-admin` | Create first admin user |
+| `yarn seed` | Insert sample catalogue products |
+| `yarn lint` | Lint client and server |
+
+## Environment
+
+See `.env.example`. Never commit real `.env` values, MongoDB URIs, JWT secrets, storage credentials, or admin passwords.
+
+Important variables:
+
+- `MONGODB_URI`
+- `JWT_SECRET` / `SESSION_SECRET`
+- `CLIENT_URL`
+- `VITE_API_URL` (frontend build-time API base, e.g. `https://api.example.com/api`)
+- `STORAGE_PROVIDER=local` for development uploads under `server/uploads`
+- Business contact fields (`BUSINESS_*`)
+
+## Brand assets
+
+- Desktop/header wordmark: `client/public/assets/brand/nemat-gems-jewellery-logo-wordmark.png`
+- Mobile/favicon emblem: `client/public/assets/brand/nemat-gems-jewellery-emblem.png`
+
+## Deployment notes
+
+### Frontend (Cloudflare Pages)
+
+1. Build command: `npm run build`
+2. Output directory: `client/dist`
+3. Set `VITE_API_URL` to the production API.
+4. SPA fallback is included via `client/public/_redirects`.
+
+### API
+
+1. Deploy the `server` Node app to any Node-compatible host.
+2. Configure production env vars and CORS `CLIENT_URL`.
+3. Persist or migrate off local uploads; prefer Cloudflare R2 in production (`STORAGE_PROVIDER=cloudflare_r2`).
+
+### MongoDB Atlas
+
+1. Create a free cluster for development.
+2. Restrict network access to your API host.
+3. Indexes are defined on the Mongoose models.
+
+## Security notes
+
+- Auth uses HTTP-only cookies (JWT).
+- Admin routes require server-side authorization.
+- Login and enquiry endpoints are rate-limited.
+- Public product APIs return only `published` products.
