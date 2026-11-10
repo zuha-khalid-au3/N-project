@@ -141,13 +141,13 @@ export default function AdminDashboard() {
               <tbody>
                 {recent.map((product) => (
                   <tr key={product._id}>
-                    <td>{product.name}</td>
-                    <td>
+                    <td data-label="Name">{product.name}</td>
+                    <td data-label="Status">
                       <span className={`status-badge status-badge--${product.status}`}>
                         {product.status}
                       </span>
                     </td>
-                    <td className="admin-actions">
+                    <td className="admin-actions" data-label="Actions">
                       <Link to={`/admin/products/${product._id}/edit`}>Edit</Link>
                       {product.status !== 'published' ? (
                         <button type="button" onClick={() => handlePublish(product._id)}>

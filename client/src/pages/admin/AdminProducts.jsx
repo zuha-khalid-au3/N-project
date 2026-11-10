@@ -123,7 +123,7 @@ export default function AdminProducts() {
               const image = product.images?.[0];
               return (
                 <tr key={product._id}>
-                  <td>
+                  <td data-label="Product">
                     <div className="admin-product-cell">
                       {image ? (
                         <img src={resolveImageUrl(image.url)} alt="" />
@@ -136,15 +136,15 @@ export default function AdminProducts() {
                       </div>
                     </div>
                   </td>
-                  <td>{product.category}</td>
-                  <td>{formatStockStatus(product.stockStatus)}</td>
-                  <td>
+                  <td data-label="Category">{product.category}</td>
+                  <td data-label="Stock">{formatStockStatus(product.stockStatus)}</td>
+                  <td data-label="Status">
                     <span className={`status-badge status-badge--${product.status}`}>
                       {product.status}
                     </span>
                   </td>
-                  <td>{product.featured ? 'Yes' : 'No'}</td>
-                  <td className="admin-actions">
+                  <td data-label="Featured">{product.featured ? 'Yes' : 'No'}</td>
+                  <td className="admin-actions" data-label="Actions">
                     <Link to={`/admin/products/${product._id}/edit`}>Edit</Link>
                     {product.status !== 'published' ? (
                       <button
