@@ -132,10 +132,9 @@ Cloudflare’s newer UI may show **Workers** with Wrangler (no “Build output d
    - Deploy command: `npx wrangler deploy`
    - Path/root: `/`
    - Important: this repo uses Yarn Classic (`1.22.22`). Cloudflare’s Yarn 4 breaks the lockfile.
-3. Environment variable (must be available at **build** time):
-   - `VITE_API_URL=https://your-api-domain/api`
-4. Repo includes `wrangler.toml` pointing assets to `client/dist` with SPA routing.
-5. Deploy, then open the Cloudflare URL and confirm products + admin login work.
+3. Do **not** set `VITE_API_URL` for the Workers deploy. The app calls same-origin `/api`, and `worker.js` proxies `/api` + `/uploads` to Render (required for mobile Safari admin login).
+4. Repo includes `wrangler.toml` + `worker.js` for assets + API proxy.
+5. Deploy with `yarn build && npx wrangler deploy`, then open the Cloudflare URL and confirm products + admin login work on mobile.
 
 If you still see classic **Pages** settings, use:
 - Build command: `yarn install && yarn build`
