@@ -3,8 +3,19 @@ import { z } from 'zod';
 const stockStatus = z.enum(['in_stock', 'made_to_order', 'out_of_stock']);
 const productStatus = z.enum(['draft', 'published', 'hidden']);
 
+const imageUrlSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (value) =>
+      value.startsWith('/uploads/') ||
+      value.startsWith('http://') ||
+      value.startsWith('https://'),
+    { message: 'Invalid image url' }
+  );
+
 const imageSchema = z.object({
-  url: z.string().url(),
+  url: imageUrlSchema,
   storageKey: z.string().min(1),
   altText: z.string().max(200).optional().default(''),
   sortOrder: z.number().int().min(0).optional().default(0),
