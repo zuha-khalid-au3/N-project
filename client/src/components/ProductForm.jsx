@@ -246,45 +246,95 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
         </div>
       </section>
 
-      <section>
-        <h2>Images</h2>
-        <p className="lead">
-          Choose photos, crop and zoom for a clean product frame, then upload. Max 8 images.
-        </p>
+      <section className="image-uploader">
+        <div className="image-uploader__header">
+          <div>
+            <h2>Images</h2>
+            <p className="lead">
+              Add up to 8 photos. First image is the cover. Crop optional.
+            </p>
+          </div>
+          <span className="image-uploader__count">
+            {form.images.length}/8
+          </span>
+        </div>
         {imagesError ? <span className="field-error">{imagesError}</span> : null}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={onFileInputChange}
-          disabled={uploading || Boolean(activeCrop)}
-        />
-        {uploading ? <StatusMessage>Uploading… {progress}%</StatusMessage> : null}
+
+        <label
+          className={`image-dropzone ${uploading || activeCrop ? 'is-disabled' : ''}`}
+        >
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={onFileInputChange}
+            disabled={uploading || Boolean(activeCrop) || form.images.length >= 8}
+          />
+          <strong>Tap to add photos</strong>
+          <span>JPG, PNG or WebP · phone camera or gallery</span>
+        </label>
+
+        {uploading ? (
+          <div className="upload-progress" role="status" aria-live="polite">
+            <div className="upload-progress__meta">
+              <strong>Uploading photo…</strong>
+              <span>{progress}%</span>
+            </div>
+            <div className="upload-progress__track">
+              <div className="upload-progress__bar" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+        ) : null}
+
+        {cropQueue.length > 1 ? (
+          <StatusMessage>
+            Cropping image {form.images.length + 1} of {form.images.length + cropQueue.length}
+          </StatusMessage>
+        ) : null}
+
+        {form.images.length === 0 && !uploading ? (
+          <p className="image-uploader__empty">No photos yet. Add at least one before publishing.</p>
+        ) : null}
+
         <div className="image-manager">
           {form.images.map((image, index) => (
             <div key={image.storageKey} className="image-manager__item">
-              <img src={resolveImageUrl(image.url)} alt={image.altText || form.name} />
-              <input
-                value={image.altText || ''}
-                onChange={(e) => {
-                  const altText = e.target.value;
-                  setForm((prev) => ({
-                    ...prev,
-                    images: prev.images.map((item) =>
-                      item.storageKey === image.storageKey ? { ...item, altText } : item
-                    ),
-                  }));
-                }}
-                placeholder="Alt text"
-              />
-              <div className="admin-actions">
-                <button type="button" onClick={() => moveImage(index, -1)}>
-                  Up
+              <div className="image-manager__preview">
+                <img src={resolveImageUrl(image.url)} alt={image.altText || form.name} />
+                {index === 0 ? <span className="image-manager__badge">Cover</span> : null}
+              </div>
+              <label>
+                Alt text
+                <input
+                  value={image.altText || ''}
+                  onChange={(e) => {
+                    const altText = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      images: prev.images.map((item) =>
+                        item.storageKey === image.storageKey ? { ...item, altText } : item
+                      ),
+                    }));
+                  }}
+                  placeholder={form.name || 'Describe this photo'}
+                />
+              </label>
+              <div className="image-manager__actions">
+                <button type="button" disabled={index === 0} onClick={() => moveImage(index, -1)}>
+                  Move up
                 </button>
-                <button type="button" onClick={() => moveImage(index, 1)}>
-                  Down
+                <button
+                  type="button"
+                  disabled={index === form.images.length - 1}
+                  onClick={() => moveImage(index, 1)}
+                >
+                  Move down
                 </button>
-                <button type="button" onClick={() => removeImage(image.storageKey)}>
+                <button
+                  type="button"
+                  className="image-manager__remove"
+                  onClick={() => removeImage(image.storageKey)}
+                >
                   Remove
                 </button>
               </div>

@@ -3,10 +3,10 @@ import Cropper from 'react-easy-crop';
 import { getCroppedImageBlob } from '../utils/cropImage.js';
 
 const ASPECT_OPTIONS = [
-  { label: 'Square 1:1', value: 1 },
-  { label: 'Portrait 4:5', value: 4 / 5 },
-  { label: 'Landscape 4:3', value: 4 / 3 },
-  { label: 'Wide 16:9', value: 16 / 9 },
+  { label: '1:1', value: 1 },
+  { label: '4:5', value: 4 / 5 },
+  { label: '4:3', value: 4 / 3 },
+  { label: '16:9', value: 16 / 9 },
 ];
 
 export default function ImageCropModal({
@@ -46,11 +46,12 @@ export default function ImageCropModal({
       <div className="crop-modal__panel">
         <div className="crop-modal__header">
           <div>
-            <h2>Crop image</h2>
-            <p>Adjust framing before upload so the product looks clean in the catalogue.</p>
+            <p className="crop-modal__eyebrow">Optional</p>
+            <h2>Frame the product</h2>
+            <p>Pinch or drag to adjust. Or skip crop and upload as-is.</p>
           </div>
           <button type="button" className="btn btn--secondary" onClick={onCancel} disabled={busy}>
-            Cancel
+            Close
           </button>
         </div>
 
@@ -68,18 +69,21 @@ export default function ImageCropModal({
         </div>
 
         <div className="crop-modal__controls">
-          <label>
-            Aspect
-            <select value={aspect} onChange={(e) => setAspect(Number(e.target.value))}>
-              {ASPECT_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Zoom
+          <div className="crop-aspect-row" role="group" aria-label="Aspect ratio">
+            {ASPECT_OPTIONS.map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                className={`crop-aspect-chip ${aspect === option.value ? 'is-active' : ''}`}
+                onClick={() => setAspect(option.value)}
+                disabled={busy}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <label className="crop-zoom">
+            <span>Zoom</span>
             <input
               type="range"
               min={1}
@@ -87,15 +91,21 @@ export default function ImageCropModal({
               step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
+              disabled={busy}
             />
           </label>
         </div>
 
         {error ? <p className="field-error">{error}</p> : null}
 
-        <div className="form-actions">
-          <button type="button" className="btn btn--secondary" onClick={onCancel} disabled={busy}>
-            Skip this image
+        <div className="crop-modal__actions">
+          <button
+            type="button"
+            className="btn btn--gold"
+            onClick={handleConfirm}
+            disabled={busy}
+          >
+            {busy ? 'Preparing…' : 'Use this crop'}
           </button>
           <button
             type="button"
@@ -105,8 +115,8 @@ export default function ImageCropModal({
           >
             Upload without crop
           </button>
-          <button type="button" className="btn btn--gold" onClick={handleConfirm} disabled={busy}>
-            {busy ? 'Preparing…' : 'Use cropped image'}
+          <button type="button" className="btn btn--ghost" onClick={onCancel} disabled={busy}>
+            Skip this photo
           </button>
         </div>
       </div>
