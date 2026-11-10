@@ -1,0 +1,8 @@
+name = "n-project"
+compatibility_date = "2025-11-10"
+
+# Cloudflare Workers static assets (new dashboard uses wrangler deploy)
+[assets]
+directory = "./client/dist"
+not_found_handling = "single-page-application"
+run_worker_first = false

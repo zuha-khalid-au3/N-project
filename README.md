@@ -121,17 +121,23 @@ Recommended easy option: **Render Web Service**
    yarn create-admin --email zuhakhalid@gmail.com --password 'your-strong-password'
    ```
 
-### 3) Deploy frontend (Cloudflare Pages)
+### 3) Deploy frontend (Cloudflare)
 
-1. Cloudflare Pages → Create project → connect GitHub repo `N-project`.
-2. Build settings:
-   - Framework preset: Vite (or None)
+Cloudflare’s newer UI may show **Workers** with Wrangler (no “Build output directory” field). That is fine.
+
+1. Connect GitHub repo `N-project`.
+2. Settings:
    - Build command: `yarn install && yarn build`
-   - Output directory: `client/dist`
-3. Environment variable:
+   - Deploy command: `npx wrangler deploy`
+   - Path/root: `/`
+3. Environment variable (must be available at **build** time):
    - `VITE_API_URL=https://your-api-domain/api`
-4. Deploy. SPA fallback is already in `client/public/_redirects`.
-5. Open the site and confirm products + admin login work.
+4. Repo includes `wrangler.toml` pointing assets to `client/dist` with SPA routing.
+5. Deploy, then open the Cloudflare URL and confirm products + admin login work.
+
+If you still see classic **Pages** settings, use:
+- Build command: `yarn install && yarn build`
+- Build output directory: `client/dist`
 
 ### 4) Production images (important)
 
