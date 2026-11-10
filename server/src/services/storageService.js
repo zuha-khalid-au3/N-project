@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { env } from '../config/environment.js';
+import { ProductImage } from '../models/ProductImage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const localUploadDir = path.resolve(__dirname, '../../uploads');
@@ -35,6 +36,10 @@ function isR2Enabled() {
     Boolean(env.r2.bucketName) &&
     Boolean(env.r2.publicBaseUrl)
   );
+}
+
+function isMongoStorageEnabled() {
+  return env.storageProvider === 'mongodb' || (!isR2Enabled() && env.storageProvider !== 'local');
 }
 
 function getR2Client() {
@@ -127,10 +132,23 @@ export async function saveUploadedFile(file, preferredKey) {
     };
   }
 
-  if (env.storageProvider === 'cloudflare_r2') {
-    console.warn(
-      'STORAGE_PROVIDER=cloudflare_r2 but R2 env vars are incomplete; falling back to local disk (not durable on Render).'
+  // Durable default for Render/production: store image bytes in MongoDB Atlas.
+  if (isMongoStorageEnabled() || env.storageProvider === 'mongodb') {
+    await ProductImage.findOneAndUpdate(
+      { storageKey },
+      {
+        storageKey,
+        contentType: file.mimetype,
+        size: file.size,
+        data: file.buffer,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+
+    return {
+      storageKey,
+      url: publicUrlForKey(storageKey),
+    };
   }
 
   await ensureLocalUploadDir();
@@ -142,6 +160,36 @@ export async function saveUploadedFile(file, preferredKey) {
     storageKey,
     url: publicUrlForKey(storageKey),
   };
+}
+
+export async function getStoredObject(storageKey) {
+  assertSafeKey(storageKey);
+
+  if (isR2Enabled()) {
+    return null;
+  }
+
+  const mongoImage = await ProductImage.findOne({ storageKey }).lean();
+  if (mongoImage?.data) {
+    return {
+      contentType: mongoImage.contentType || 'application/octet-stream',
+      size: mongoImage.size || mongoImage.data.length,
+      data: mongoImage.data,
+      source: 'mongodb',
+    };
+  }
+
+  const absolutePath = path.join(localUploadDir, storageKey);
+  try {
+    const data = await fs.readFile(absolutePath);
+    const ext = path.extname(storageKey).toLowerCase();
+    const contentType =
+      ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+    return { contentType, size: data.length, data, source: 'local' };
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
 }
 
 export async function deleteStoredObject(storageKey) {
@@ -161,6 +209,8 @@ export async function deleteStoredObject(storageKey) {
     }
     return;
   }
+
+  await ProductImage.deleteOne({ storageKey });
 
   const absolutePath = path.join(localUploadDir, storageKey);
   try {

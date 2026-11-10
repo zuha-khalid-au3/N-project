@@ -143,26 +143,32 @@ If you still see classic **Pages** settings, use:
 
 ### 4) Production images (important)
 
-Local disk uploads on Render **do not persist**. After redeploy/restart, `/uploads/...` files disappear and product images break (MongoDB still has the old path).
+Local disk uploads on Render **do not persist**.
 
-#### Use Cloudflare R2 (recommended, free tier available)
+#### Recommended on Render: store images in MongoDB Atlas
 
-1. Cloudflare Dashboard → **R2** → Create bucket (example: `nemat-gems-images`)
-2. Enable **Public access** via an R2 custom domain or r2.dev public URL
-3. Create an R2 API token with Object Read & Write
-4. On Render, set:
+No extra Cloudflare R2 setup needed. Image files are saved in MongoDB and served from:
+
+`https://YOUR-API.onrender.com/uploads/products/...`
+
+On Render set:
+
+```env
+STORAGE_PROVIDER=mongodb
+```
+
+Then **re-upload** product images in admin after deploy (old disk-only files are already gone).
+
+#### Optional: Cloudflare R2
 
 ```env
 STORAGE_PROVIDER=cloudflare_r2
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_ACCESS_KEY_ID=your_r2_access_key
-R2_SECRET_ACCESS_KEY=your_r2_secret_key
-R2_BUCKET_NAME=nemat-gems-images
+R2_ACCOUNT_ID=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=...
 R2_PUBLIC_BASE_URL=https://pub-xxxxx.r2.dev
 ```
-
-5. Redeploy API
-6. Re-upload product images in admin (old local paths will 404)
 
 ### Quick checklist
 

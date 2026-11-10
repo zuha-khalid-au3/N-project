@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import inquiryRoutes from './routes/inquiryRoutes.js';
+import { serveUpload } from './controllers/mediaController.js';
 import { localUploadDir } from './services/storageService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +44,12 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
   app.use(cookieParser(env.sessionSecret));
 
+  // Serve durable MongoDB-backed images first, then local disk fallback.
+  app.get('/uploads/*storageKey', (req, res, next) => {
+    const wildcard = req.params.storageKey;
+    req.params[0] = Array.isArray(wildcard) ? wildcard.join('/') : String(wildcard || '');
+    return serveUpload(req, res, next);
+  });
   app.use('/uploads', express.static(localUploadDir));
 
   app.get('/api/health', getHealth);

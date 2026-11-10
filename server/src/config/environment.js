@@ -38,7 +38,8 @@ export const env = {
   jwtSecret: requiredInProduction('JWT_SECRET', 'dev-only-jwt-secret-change-me'),
   sessionSecret: requiredInProduction('SESSION_SECRET', 'dev-only-session-secret-change-me'),
   cookieName: process.env.COOKIE_NAME || 'nemat_gems_session',
-  storageProvider: process.env.STORAGE_PROVIDER || 'local',
+  // mongodb = durable on Atlas (recommended for Render), local = disk, cloudflare_r2 = R2
+  storageProvider: process.env.STORAGE_PROVIDER || 'mongodb',
   r2: {
     accountId: process.env.R2_ACCOUNT_ID || '',
     accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
