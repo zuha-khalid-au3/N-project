@@ -20,19 +20,19 @@ function placeholderTone(product) {
   return toneMap.crystal;
 }
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, featured = false }) {
   const business = useBusiness();
   const image = product.images?.[0];
   const tone = placeholderTone(product);
 
   return (
-    <article className="product-card">
+    <article className={`product-card ${featured ? 'product-card--featured' : ''}`}>
       <Link to={`/products/${product.slug}`} className="product-card__media">
         {image ? (
           <img
             src={resolveImageUrl(image.url)}
             alt={image.altText || product.name}
-            loading="lazy"
+            loading={featured ? 'eager' : 'lazy'}
           />
         ) : (
           <div
@@ -60,9 +60,6 @@ export default function ProductCard({ product }) {
         </ul>
         <p className="product-card__price">{product.priceLabel || 'Contact for quotation'}</p>
         <div className="product-card__actions">
-          <Link className="btn btn--secondary btn--compact" to={`/products/${product.slug}`}>
-            View Details
-          </Link>
           <a
             className="btn btn--gold btn--compact"
             href={buildWhatsAppUrl(business.whatsapp, productEnquiryMessage(product.name))}
@@ -71,6 +68,9 @@ export default function ProductCard({ product }) {
           >
             Ask on WhatsApp
           </a>
+          <Link className="btn btn--secondary btn--compact" to={`/products/${product.slug}`}>
+            View Details
+          </Link>
         </div>
       </div>
     </article>

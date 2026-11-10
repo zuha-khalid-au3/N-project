@@ -18,7 +18,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 5050),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  mongodbUri: process.env.MONGODB_URI || '',
+  mongodbUri: (process.env.MONGODB_URI || '').trim(),
   jwtSecret: requiredInProduction('JWT_SECRET', 'dev-only-jwt-secret-change-me'),
   sessionSecret: requiredInProduction('SESSION_SECRET', 'dev-only-session-secret-change-me'),
   cookieName: process.env.COOKIE_NAME || 'nemat_gems_session',

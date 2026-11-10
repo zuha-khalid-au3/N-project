@@ -9,7 +9,9 @@ import Home from './pages/Home.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
 import Products from './pages/Products.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import AdminInquiries from './pages/admin/AdminInquiries.jsx';
 import AdminLogin from './pages/admin/AdminLogin.jsx';
+import AdminProducts from './pages/admin/AdminProducts.jsx';
 import ProductCreate from './pages/admin/ProductCreate.jsx';
 import ProductEdit from './pages/admin/ProductEdit.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
@@ -32,8 +34,10 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="products" element={<AdminProducts />} />
                 <Route path="products/new" element={<ProductCreate />} />
                 <Route path="products/:id/edit" element={<ProductEdit />} />
+                <Route path="inquiries" element={<AdminInquiries />} />
               </Route>
             </Route>
 

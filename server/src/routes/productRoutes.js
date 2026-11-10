@@ -4,6 +4,7 @@ import {
   adminDashboard,
   adminDeleteProduct,
   adminGetProduct,
+  adminHideProduct,
   adminListProducts,
   adminPublishProduct,
   adminUnpublishProduct,
@@ -58,5 +59,6 @@ router.patch(
 router.delete('/admin/products/:id', requireAuth, requireAdmin, adminDeleteProduct);
 router.post('/admin/products/:id/publish', requireAuth, requireAdmin, adminPublishProduct);
 router.post('/admin/products/:id/unpublish', requireAuth, requireAdmin, adminUnpublishProduct);
+router.post('/admin/products/:id/hide', requireAuth, requireAdmin, adminHideProduct);
 
 export default router;

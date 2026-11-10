@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ImageCropModal from './ImageCropModal.jsx';
 import StatusMessage from './StatusMessage.jsx';
 import { useBusiness } from '../context/BusinessContext.jsx';
 import { uploadProductImage } from '../services/productService.js';
@@ -31,40 +32,60 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [cropQueue, setCropQueue] = useState([]);
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleUpload(event) {
+  function onFileInputChange(event) {
     const files = Array.from(event.target.files || []);
+    event.target.value = '';
     if (!files.length) return;
+
     if (form.images.length + files.length > 8) {
       setError('Maximum 8 images per product.');
       return;
     }
 
+    setError('');
+    setCropQueue(
+      files.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }))
+    );
+  }
+
+  async function uploadCroppedFile(file) {
     setUploading(true);
     setError('');
     try {
-      const uploaded = [];
-      for (let index = 0; index < files.length; index += 1) {
-        const file = files[index];
-        const response = await uploadProductImage(file, {
-          altText: form.name || file.name,
-          sortOrder: form.images.length + index,
-          onProgress: setProgress,
-        });
-        uploaded.push(response.data.image);
-      }
-      setForm((prev) => ({ ...prev, images: [...prev.images, ...uploaded] }));
+      const response = await uploadProductImage(file, {
+        altText: form.name || file.name,
+        sortOrder: form.images.length,
+        onProgress: setProgress,
+      });
+      setForm((prev) => ({ ...prev, images: [...prev.images, response.data.image] }));
     } catch (err) {
       setError(err?.error?.message || err.message || 'Image upload failed.');
     } finally {
       setUploading(false);
       setProgress(0);
-      event.target.value = '';
     }
+  }
+
+  async function handleCropConfirm(croppedFile) {
+    const [current, ...remaining] = cropQueue;
+    if (current?.preview) URL.revokeObjectURL(current.preview);
+    setCropQueue(remaining);
+    await uploadCroppedFile(croppedFile);
+  }
+
+  function handleCropCancel() {
+    const [current, ...remaining] = cropQueue;
+    if (current?.preview) URL.revokeObjectURL(current.preview);
+    setCropQueue(remaining);
   }
 
   function removeImage(storageKey) {
@@ -113,9 +134,22 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
     }
   }
 
+  const activeCrop = cropQueue[0];
+
   return (
     <form className="product-form" onSubmit={(e) => handleSubmit(e)}>
       {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+
+      {activeCrop ? (
+        <ImageCropModal
+          imageSrc={activeCrop.preview}
+          fileName={activeCrop.file.name}
+          originalFile={activeCrop.file}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+          onUploadOriginal={handleCropConfirm}
+        />
+      ) : null}
 
       <section>
         <h2>Basic information</h2>
@@ -197,7 +231,16 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
 
       <section>
         <h2>Images</h2>
-        <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} />
+        <p className="lead">
+          Choose photos, crop and zoom for a clean product frame, then upload. Max 8 images.
+        </p>
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          onChange={onFileInputChange}
+          disabled={uploading || Boolean(activeCrop)}
+        />
         {uploading ? <StatusMessage>Uploading… {progress}%</StatusMessage> : null}
         <div className="image-manager">
           {form.images.map((image, index) => (

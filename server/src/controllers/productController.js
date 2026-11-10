@@ -86,9 +86,33 @@ export async function adminListProducts(req, res, next) {
 
 export async function adminDashboard(req, res, next) {
   try {
+    const { Inquiry } = await import('../models/Inquiry.js');
     const stats = await getAdminStats();
-    const recent = await listAdminProducts({ page: 1, limit: 8, q: '', status: '' });
-    return success(res, { stats, recent: recent.items });
+    const [recent, inquiryStats, recentInquiries] = await Promise.all([
+      listAdminProducts({ page: 1, limit: 8, q: '', status: '' }),
+      Inquiry.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Inquiry.find().sort({ createdAt: -1 }).limit(5).lean(),
+    ]);
+
+    const inquiries = { new: 0, contacted: 0, closed: 0, total: 0 };
+    for (const row of inquiryStats) {
+      inquiries[row._id] = row.count;
+      inquiries.total += row.count;
+    }
+
+    return success(res, {
+      stats,
+      recent: recent.items,
+      inquiries,
+      recentInquiries,
+    });
   } catch (error) {
     return next(error);
   }
@@ -158,6 +182,18 @@ export async function adminUnpublishProduct(req, res, next) {
       return failure(res, 'NOT_FOUND', 'Product not found', 404);
     }
     return success(res, { product }, 'Product unpublished successfully');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminHideProduct(req, res, next) {
+  try {
+    const product = await setProductStatus(req.params.id, 'hidden');
+    if (!product) {
+      return failure(res, 'NOT_FOUND', 'Product not found', 404);
+    }
+    return success(res, { product }, 'Product hidden successfully');
   } catch (error) {
     return next(error);
   }

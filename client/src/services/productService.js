@@ -67,6 +67,17 @@ export function unpublishProduct(id) {
   return apiRequest(`/admin/products/${id}/unpublish`, { method: 'POST' });
 }
 
+export function hideProduct(id) {
+  return apiRequest(`/admin/products/${id}/hide`, { method: 'POST' });
+}
+
+export function toggleFeaturedProduct(id, featured) {
+  return apiRequest(`/admin/products/${id}`, {
+    method: 'PATCH',
+    body: { featured: Boolean(featured) },
+  });
+}
+
 export async function uploadProductImage(file, { altText = '', sortOrder = 0, onProgress } = {}) {
   const sign = await apiRequest('/admin/uploads/sign', {
     method: 'POST',

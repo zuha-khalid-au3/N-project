@@ -4,45 +4,80 @@ import ProductCard from '../components/ProductCard.jsx';
 import Seo from '../components/Seo.jsx';
 import StatusMessage from '../components/StatusMessage.jsx';
 import { useBusiness } from '../context/BusinessContext.jsx';
-import { fetchFeaturedProducts } from '../services/productService.js';
+import { fetchFeaturedProducts, fetchProducts } from '../services/productService.js';
 import { buildWhatsAppUrl, generalQuoteMessage } from '../utils/whatsapp.js';
+
+function mergeProducts(featured = [], latest = []) {
+  const seen = new Set();
+  const merged = [];
+  for (const product of [...featured, ...latest]) {
+    const key = product._id || product.slug;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(product);
+  }
+  return merged;
+}
+
+function ProductSkeleton() {
+  return (
+    <div className="product-skeleton" aria-hidden="true">
+      <div className="product-skeleton__media" />
+      <div className="product-skeleton__line" />
+      <div className="product-skeleton__line product-skeleton__line--short" />
+      <div className="product-skeleton__line product-skeleton__line--price" />
+    </div>
+  );
+}
 
 export default function Home() {
   const business = useBusiness();
-  const [featured, setFeatured] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchFeaturedProducts()
-      .then((response) => setFeatured(response.data.items || []))
-      .catch(() => setError('Unable to load featured products right now.'))
-      .finally(() => setLoading(false));
+    let active = true;
+    Promise.all([
+      fetchFeaturedProducts().catch(() => ({ data: { items: [] } })),
+      fetchProducts({ limit: 16, sort: 'newest' }),
+    ])
+      .then(([featuredResponse, productsResponse]) => {
+        if (!active) return;
+        setProducts(
+          mergeProducts(featuredResponse.data.items || [], productsResponse.data.items || [])
+        );
+      })
+      .catch(() => {
+        if (active) setError('Unable to load products right now.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
     <>
       <Seo
-        title="Crafted Brilliance for Every Creation"
+        title="Shop Artificial Gems & Stones"
         description={business.tagline}
         path="/"
       />
 
-      <section className="hero">
-        <div className="hero__glow hero__glow--one" aria-hidden="true" />
-        <div className="hero__glow hero__glow--two" aria-hidden="true" />
-        <div className="hero__overlay" />
-        <div className="hero__content">
-          <p className="hero__brand">{business.name}</p>
-          <h1>Crafted Brilliance for Every Creation</h1>
-          <p className="hero__support">
-            Browse ready catalogue pieces and request a quote in one step — colour, cut, size, and
-            wholesale quantities for jewellery makers and buyers.
-          </p>
-          <div className="hero__actions">
-            <Link className="btn btn--gold" to="/products">
-              Explore Products
-            </Link>
+      <section className="store-banner">
+        <div className="store-banner__inner">
+          <div>
+            <p className="store-banner__brand">{business.name}</p>
+            <h1>Shop gems & stones online</h1>
+            <p>Pick a product below and request a quote instantly on WhatsApp.</p>
+          </div>
+          <div className="store-banner__actions">
+            <a className="btn btn--gold" href="#shop">
+              Shop now
+            </a>
             <a
               className="btn btn--ghost-light"
               href={buildWhatsAppUrl(business.whatsapp, generalQuoteMessage())}
@@ -55,73 +90,64 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="buy-strip" aria-label="How to order">
-        <div className="buy-strip__inner">
+      <section id="shop" className="section section--shop-first">
+        <div className="shop-toolbar">
           <div>
-            <strong>01</strong>
-            <p>Browse the catalogue</p>
+            <h2>All products</h2>
+            <p>{loading ? 'Loading catalogue…' : `${products.length} pieces ready to enquire`}</p>
           </div>
-          <div>
-            <strong>02</strong>
-            <p>Pick colour, shape, size</p>
-          </div>
-          <div>
-            <strong>03</strong>
-            <p>Ask on WhatsApp for quotation</p>
+          <div className="category-chips" aria-label="Quick collections">
+            {business.categories.map((category) => (
+              <Link
+                key={category}
+                className="category-chip"
+                to={`/products?category=${encodeURIComponent(category)}`}
+              >
+                {category}
+              </Link>
+            ))}
           </div>
         </div>
-      </section>
 
-      <section className="section">
-        <div className="section__header section__header--split">
-          <div>
-            <h2>Shop by Collection</h2>
-            <p>Open a collection and enquire on the pieces you need.</p>
+        {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+
+        {loading ? (
+          <div className="product-grid product-grid--shop">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <ProductSkeleton key={index} />
+            ))}
           </div>
-          <Link className="text-link" to="/products">
-            View Collection
-          </Link>
-        </div>
-        <div className="category-grid">
-          {business.categories.map((category, index) => (
-            <Link
-              key={category}
-              className={`category-link category-link--tone-${(index % 4) + 1}`}
-              to={`/products?category=${encodeURIComponent(category)}`}
-            >
-              <span>{category}</span>
-              <em>View Collection</em>
+        ) : null}
+
+        {!loading && !error && products.length === 0 ? (
+          <StatusMessage>No published products yet. Check back soon.</StatusMessage>
+        ) : null}
+
+        {!loading && products.length > 0 ? (
+          <div className="product-grid product-grid--shop">
+            {products.map((product, index) => (
+              <ProductCard
+                key={product._id || product.slug}
+                product={product}
+                featured={index === 0}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {!loading && products.length > 0 ? (
+          <div className="shop-footer-cta">
+            <Link className="btn btn--gold" to="/products">
+              View full catalogue
             </Link>
-          ))}
-        </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="section section--muted">
-        <div className="section__header section__header--split">
-          <div>
-            <h2>Ready to Enquire</h2>
-            <p>Featured pieces with direct WhatsApp quotation actions.</p>
-          </div>
-          <Link className="btn btn--gold" to="/products">
-            Explore Products
-          </Link>
-        </div>
-        {loading ? <StatusMessage>Loading featured products…</StatusMessage> : null}
-        {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
-        {!loading && !error && featured.length === 0 ? (
-          <StatusMessage>No featured products published yet.</StatusMessage>
-        ) : null}
-        <div className="product-grid">
-          {featured.map((product) => (
-            <ProductCard key={product._id || product.slug} product={product} />
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
         <div className="section__header">
-          <h2>Manufacturing & Quality</h2>
-          <p>Built for wholesale and custom gem requirements.</p>
+          <h2>Why buyers choose us</h2>
+          <p>Clear catalogue, fast WhatsApp quotes, and wholesale-friendly ordering.</p>
         </div>
         <ul className="claim-list claim-list--tiles">
           {business.manufacturingClaims.map((claim) => (
@@ -132,8 +158,8 @@ export default function Home() {
 
       <section className="enquiry-band">
         <div>
-          <h2>Looking for a specific colour, shape, or size?</h2>
-          <p>Share your requirements and get availability plus quotation details quickly.</p>
+          <h2>Need a custom colour, shape, or size?</h2>
+          <p>Tell us what you need and get a quotation quickly.</p>
         </div>
         <div className="hero__actions">
           <a

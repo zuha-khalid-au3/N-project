@@ -87,26 +87,69 @@ Important variables:
 - Desktop/header wordmark: `client/public/assets/brand/nemat-gems-jewellery-logo-wordmark.png`
 - Mobile/favicon emblem: `client/public/assets/brand/nemat-gems-jewellery-emblem.png`
 
-## Deployment notes
+## Deployment guide
 
-### Frontend (Cloudflare Pages)
+You need **3 parts**: website (frontend), API (backend), MongoDB (already on Atlas).
 
-1. Build command: `npm run build`
-2. Output directory: `client/dist`
-3. Set `VITE_API_URL` to the production API.
-4. SPA fallback is included via `client/public/_redirects`.
+### 1) MongoDB Atlas (already set up)
 
-### API
+- Keep your cluster running.
+- Network Access: allow your API host IPs (or temporarily `0.0.0.0/0` while testing).
+- Use the same `MONGODB_URI` in the API host env vars.
 
-1. Deploy the `server` Node app to any Node-compatible host.
-2. Configure production env vars and CORS `CLIENT_URL`.
-3. Persist or migrate off local uploads; prefer Cloudflare R2 in production (`STORAGE_PROVIDER=cloudflare_r2`).
+### 2) Deploy API (Render / Railway / Fly.io)
 
-### MongoDB Atlas
+Recommended easy option: **Render Web Service**
 
-1. Create a free cluster for development.
-2. Restrict network access to your API host.
-3. Indexes are defined on the Mongoose models.
+1. Create a new Web Service from this GitHub repo.
+2. Root/settings:
+   - Build command: `yarn install`
+   - Start command: `yarn workspace server start`
+3. Add env vars from `.env.example` (production values):
+   - `NODE_ENV=production`
+   - `PORT` (host usually sets this)
+   - `MONGODB_URI`
+   - `JWT_SECRET` / `SESSION_SECRET` (long random strings)
+   - `CLIENT_URL=https://your-frontend-domain`
+   - `COOKIE_NAME=nemat_gems_session`
+   - `BUSINESS_*` contact fields
+   - For images in production, use object storage (see below). Local `server/uploads` is fine only for demos.
+4. After deploy, test: `https://your-api-domain/api/health` → `{ "ok": true }`
+5. Create admin on the server once:
+
+   ```bash
+   yarn create-admin --email zuhakhalid@gmail.com --password 'your-strong-password'
+   ```
+
+### 3) Deploy frontend (Cloudflare Pages)
+
+1. Cloudflare Pages → Create project → connect GitHub repo `N-project`.
+2. Build settings:
+   - Framework preset: Vite (or None)
+   - Build command: `yarn install && yarn build`
+   - Output directory: `client/dist`
+3. Environment variable:
+   - `VITE_API_URL=https://your-api-domain/api`
+4. Deploy. SPA fallback is already in `client/public/_redirects`.
+5. Open the site and confirm products + admin login work.
+
+### 4) Production images (important)
+
+Local disk uploads do **not** persist well on most free/ephemeral hosts.
+
+For production:
+
+- Prefer Cloudflare R2 (or similar)
+- Set `STORAGE_PROVIDER=cloudflare_r2` and R2 credentials in API env
+- Until R2 is fully wired, you can still demo with local uploads, but expect files to reset on redeploy
+
+### Quick checklist
+
+- [ ] API health endpoint works
+- [ ] `CLIENT_URL` matches frontend domain (CORS + cookies)
+- [ ] Frontend `VITE_API_URL` points to API `/api`
+- [ ] Admin user created in production DB
+- [ ] Product images uploading and visible on public site
 
 ## Security notes
 
