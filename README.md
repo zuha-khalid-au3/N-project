@@ -127,9 +127,10 @@ Cloudflare’s newer UI may show **Workers** with Wrangler (no “Build output d
 
 1. Connect GitHub repo `N-project`.
 2. Settings:
-   - Build command: `yarn install && yarn build`
+   - Build command: `corepack enable && corepack prepare yarn@1.22.22 --activate && yarn install --frozen-lockfile && yarn build`
    - Deploy command: `npx wrangler deploy`
    - Path/root: `/`
+   - Important: this repo uses Yarn Classic (`1.22.22`). Cloudflare’s Yarn 4 breaks the lockfile.
 3. Environment variable (must be available at **build** time):
    - `VITE_API_URL=https://your-api-domain/api`
 4. Repo includes `wrangler.toml` pointing assets to `client/dist` with SPA routing.
