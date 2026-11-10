@@ -171,10 +171,14 @@ export async function getStoredObject(storageKey) {
 
   const mongoImage = await ProductImage.findOne({ storageKey }).lean();
   if (mongoImage?.data) {
+    const raw = mongoImage.data;
+    const data = Buffer.isBuffer(raw)
+      ? raw
+      : Buffer.from(raw.buffer ?? raw);
     return {
       contentType: mongoImage.contentType || 'application/octet-stream',
-      size: mongoImage.size || mongoImage.data.length,
-      data: mongoImage.data,
+      size: mongoImage.size || data.length,
+      data,
       source: 'mongodb',
     };
   }
