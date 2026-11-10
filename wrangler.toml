@@ -1,4 +1,4 @@
-name = "n-project"
+name = "nemat"
 compatibility_date = "2025-11-10"
 
 # Cloudflare Workers static assets (new dashboard uses wrangler deploy)
