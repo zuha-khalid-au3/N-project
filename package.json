@@ -1,0 +1,14 @@
+{
+  "name": "n-project",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nemat Gems and Jewellery product catalogue starter project",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "echo \"Run the Cursor implementation phases first; client and server scripts will be added during scaffolding.\"",
+    "build": "echo \"Build scripts will be added during Phase A.\""
+  }
+}
