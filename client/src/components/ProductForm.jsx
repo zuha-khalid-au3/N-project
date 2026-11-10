@@ -68,7 +68,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
       });
       setForm((prev) => ({ ...prev, images: [...prev.images, response.data.image] }));
     } catch (err) {
-      setError(err?.error?.message || err.message || 'Image upload failed.');
+      setError(err.message || 'Image upload failed. Check file type (JPG/PNG/WebP) and size.');
     } finally {
       setUploading(false);
       setProgress(0);
@@ -127,14 +127,26 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
       };
       await onSubmit(payload);
     } catch (err) {
-      setError(err.message || 'Unable to save product.');
-      setFieldErrors(err.fields || {});
+      const fields = err.fields || {};
+      setFieldErrors(fields);
+      const fieldMessages = Object.values(fields).filter(Boolean);
+      setError(
+        err.message ||
+          (fieldMessages.length ? fieldMessages.join(' · ') : 'Unable to save product.')
+      );
     } finally {
       setSaving(false);
     }
   }
 
+  function fieldError(key) {
+    return fieldErrors[key] ? <span className="field-error">{fieldErrors[key]}</span> : null;
+  }
+
   const activeCrop = cropQueue[0];
+  const imagesError =
+    fieldErrors.images ||
+    Object.entries(fieldErrors).find(([key]) => key.startsWith('images.'))?.[1];
 
   return (
     <form className="product-form" onSubmit={(e) => handleSubmit(e)}>
@@ -157,11 +169,12 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
           <label>
             Product name
             <input required value={form.name} onChange={(e) => updateField('name', e.target.value)} />
-            {fieldErrors.name ? <span className="field-error">{fieldErrors.name}</span> : null}
+            {fieldError('name')}
           </label>
           <label>
             SKU
             <input value={form.sku} onChange={(e) => updateField('sku', e.target.value)} />
+            {fieldError('sku')}
           </label>
           <label>
             Category
@@ -177,6 +190,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
                 </option>
               ))}
             </select>
+            {fieldError('category')}
           </label>
           <label>
             Description
@@ -186,6 +200,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
             />
+            {fieldError('description')}
           </label>
         </div>
       </section>
@@ -205,6 +220,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
             <label key={key}>
               {label}
               <input value={form[key]} onChange={(e) => updateField(key, e.target.value)} />
+              {fieldError(key)}
             </label>
           ))}
           <label>
@@ -217,6 +233,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
               <option value="made_to_order">Made to order</option>
               <option value="out_of_stock">Out of stock</option>
             </select>
+            {fieldError('stockStatus')}
           </label>
           <label className="checkbox-label">
             <input
@@ -234,6 +251,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
         <p className="lead">
           Choose photos, crop and zoom for a clean product frame, then upload. Max 8 images.
         </p>
+        {imagesError ? <span className="field-error">{imagesError}</span> : null}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -284,6 +302,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
               value={form.seo?.title || ''}
               onChange={(e) => updateField('seo', { ...form.seo, title: e.target.value })}
             />
+            {fieldError('seo.title')}
           </label>
           <label>
             SEO description
@@ -292,6 +311,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
               value={form.seo?.description || ''}
               onChange={(e) => updateField('seo', { ...form.seo, description: e.target.value })}
             />
+            {fieldError('seo.description')}
           </label>
         </div>
       </section>
@@ -305,6 +325,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel = 'Sa
             <option value="published">Published</option>
             <option value="hidden">Hidden</option>
           </select>
+          {fieldError('status')}
         </label>
       </section>
 
