@@ -143,13 +143,26 @@ If you still see classic **Pages** settings, use:
 
 ### 4) Production images (important)
 
-Local disk uploads do **not** persist well on most free/ephemeral hosts.
+Local disk uploads on Render **do not persist**. After redeploy/restart, `/uploads/...` files disappear and product images break (MongoDB still has the old path).
 
-For production:
+#### Use Cloudflare R2 (recommended, free tier available)
 
-- Prefer Cloudflare R2 (or similar)
-- Set `STORAGE_PROVIDER=cloudflare_r2` and R2 credentials in API env
-- Until R2 is fully wired, you can still demo with local uploads, but expect files to reset on redeploy
+1. Cloudflare Dashboard → **R2** → Create bucket (example: `nemat-gems-images`)
+2. Enable **Public access** via an R2 custom domain or r2.dev public URL
+3. Create an R2 API token with Object Read & Write
+4. On Render, set:
+
+```env
+STORAGE_PROVIDER=cloudflare_r2
+R2_ACCOUNT_ID=your_cloudflare_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key
+R2_SECRET_ACCESS_KEY=your_r2_secret_key
+R2_BUCKET_NAME=nemat-gems-images
+R2_PUBLIC_BASE_URL=https://pub-xxxxx.r2.dev
+```
+
+5. Redeploy API
+6. Re-upload product images in admin (old local paths will 404)
 
 ### Quick checklist
 
