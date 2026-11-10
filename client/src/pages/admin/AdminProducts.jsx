@@ -34,8 +34,11 @@ export default function AdminProducts() {
       });
       setItems(response.data.items || []);
       setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 });
-    } catch {
-      setError('Unable to load products.');
+    } catch (err) {
+      setError(
+        err.message ||
+          'Unable to load products. The server may be waking up — please retry in a few seconds.'
+      );
     } finally {
       setLoading(false);
     }

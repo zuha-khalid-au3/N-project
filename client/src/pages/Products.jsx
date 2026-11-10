@@ -20,6 +20,7 @@ export default function Products() {
   const [filters, setFilters] = useState(emptyFilters);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reloadToken, setReloadToken] = useState(0);
 
   const query = useMemo(
     () => ({
@@ -43,16 +44,29 @@ export default function Products() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError('');
     fetchProducts(query)
       .then((response) => {
+        if (cancelled) return;
         setProducts(response.data.items || []);
         setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 });
       })
-      .catch(() => setError('Unable to load products.'))
-      .finally(() => setLoading(false));
-  }, [query]);
+      .catch((err) => {
+        if (cancelled) return;
+        setError(
+          err.message ||
+            'Unable to load products. The server may be waking up — please retry in a few seconds.'
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [query, reloadToken]);
 
   function updateParam(key, value) {
     const next = new URLSearchParams(searchParams);
@@ -145,7 +159,18 @@ export default function Products() {
       </form>
 
       {loading ? <StatusMessage>Loading products…</StatusMessage> : null}
-      {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+      {error ? (
+        <div>
+          <StatusMessage tone="error">{error}</StatusMessage>
+          <button
+            type="button"
+            className="btn btn--gold"
+            onClick={() => setReloadToken((value) => value + 1)}
+          >
+            Retry loading products
+          </button>
+        </div>
+      ) : null}
       {!loading && !error && products.length === 0 ? (
         <StatusMessage>No products match your filters.</StatusMessage>
       ) : null}
